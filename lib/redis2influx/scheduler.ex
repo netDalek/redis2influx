@@ -18,6 +18,6 @@ defmodule Redis2influx.Scheduler do
   end
 
   defp schedule_work(interval) do
-    Process.send_after(self(), :work, interval)
+    Process.send_after(self(), :work, interval*1000)
   end
 end
