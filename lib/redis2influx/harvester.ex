@@ -4,14 +4,14 @@ defmodule Redis2influx.Harvester do
   alias Redis2influx.Eredis
 
   @defaults %{value: :value, tags: []}
-  @metrics Application.get_env(:redis2influx, :metrics, [])
 
-  def check(metrics \\ @metrics) do
+  def check() do
+    metrics = Application.get_env(:redis2influx, :metrics, [])
     redises = Application.fetch_env!(:redis2influx, :redises)
 
     points = metrics
     |> Enum.map(&Map.merge(@defaults, &1))
-    |> flatten
+    |> Enum.flat_map(&flatten/1)
     |> Enum.flat_map(&resolve_redises(&1, redises))
     |> Enum.map(&substitute/1)
     |> Enum.map(&measure/1)
@@ -77,9 +77,6 @@ defmodule Redis2influx.Harvester do
         %{redis: :b}
       ]
   """
-  def flatten(metrics) when is_list(metrics) do
-    metrics |> Enum.flat_map(&flatten/1)
-  end
   def flatten(%{cmd: cmds} = metric) when is_map(cmds) do
     cmds |> Enum.flat_map(fn({name, cmd}) ->
       %{metric | cmd: cmd, value: name}
