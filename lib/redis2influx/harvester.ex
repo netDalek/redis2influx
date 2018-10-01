@@ -8,6 +8,8 @@ defmodule Redis2influx.Harvester do
   def check() do
     metrics = Application.get_env(:redis2influx, :metrics, [])
     redises = Application.fetch_env!(:redis2influx, :redises)
+    interval = Redis2influx.interval
+    nanosecond_timestamp = interval * div(:os.system_time(:second), interval) * 1_000_000_000
 
     points = metrics
     |> Enum.map(&Map.merge(@defaults, &1))
@@ -17,6 +19,7 @@ defmodule Redis2influx.Harvester do
     |> Enum.map(&measure/1)
     |> Enum.filter(fn(m) -> Map.has_key?(m, :result) end)
     |> Enum.map(&build_influx_data/1)
+    |> Enum.map(&Map.put(&1, :timestamp, nanosecond_timestamp))
 
     Logger.debug("writing points #{inspect points}")
 

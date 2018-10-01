@@ -12,8 +12,7 @@ defmodule Redis2influx.Scheduler do
 
   def handle_info(:work, state) do
     Redis2influx.Harvester.check
-    interval = Application.fetch_env!(:redis2influx, :interval)
-    schedule_work(interval)
+    schedule_work(Redis2influx.interval)
     {:noreply, state}
   end
 

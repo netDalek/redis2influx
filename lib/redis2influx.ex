@@ -1,18 +1,5 @@
 defmodule Redis2influx do
-  @moduledoc """
-  Documentation for Redis2influx.
-  """
-
-  @doc """
-  Hello world.
-
-  ## Examples
-
-      iex> Redis2influx.hello
-      :world
-
-  """
-  def hello do
-    :world
+  def interval do
+    Application.fetch_env!(:redis2influx, :interval)
   end
 end

@@ -9,7 +9,7 @@ config :redis2influx, Redis2influx.Influx,
   writer:    Instream.Writer.Line,
   query_timeout: 500
 
-config :redis2influx, :interval, 1000
+config :redis2influx, :interval, 1
 
 config :redis2influx, :redises, %{}
 

@@ -10,8 +10,6 @@ config :redis2influx, redises: %{
   }
 }
 
-config :redis2influx, :interval, 1000
-
 config :redis2influx, :metrics, [
   %{
     measurement: :metric1,
