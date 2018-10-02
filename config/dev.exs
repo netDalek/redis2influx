@@ -4,7 +4,7 @@ config :redis2influx, redises: %{
   redis0: ['127.0.0.1', 6379, 0],
   redis1: ['127.0.0.1', 6379, 1],
 
-  redis: %{
+  redis_group: %{
     a: ['127.0.0.1', 6379, 3],
     b: ['127.0.0.1', 6379, 4],
   }
@@ -13,13 +13,13 @@ config :redis2influx, redises: %{
 config :redis2influx, :metrics, [
   %{
     measurement: :metric1,
-    redis: [:redis1, {:redis, :a}],
+    redis: [:redis1, {:redis_group, :a}],
     cmd: ["LLEN", "list1"],
     tags: [type: :sample]
   },
   %{
     measurement: :metric4,
-    redis: [:redis0, :redis1, :redis],
+    redis: [:redis0, :redis1, :redis_group],
     cmd: %{
       l1: ["LLEN", "list1"],
       l2: ["LLEN", "list2"],

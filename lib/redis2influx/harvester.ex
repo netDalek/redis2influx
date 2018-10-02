@@ -1,30 +1,43 @@
 defmodule Redis2influx.Harvester do
   require Logger
 
-  alias Redis2influx.Eredis
-
   @defaults %{value: :value, tags: []}
 
-  def check() do
-    metrics = Application.get_env(:redis2influx, :metrics, [])
-    redises = Application.fetch_env!(:redis2influx, :redises)
-    interval = Redis2influx.interval
-    nanosecond_timestamp = interval * div(:os.system_time(:second), interval) * 1_000_000_000
+  @redis_client Application.get_env(:redis2influx, :redis_client, Redis2influx.Eredis)
 
-    points = metrics
+  @doc """
+  ## Examples
+
+      iex> Redis2influx.Harvester.check([%{measurement: "m", cmd: [], redis: :a}], %{a: []}, 0)
+      [%{tags: %{redis: :a}, fields: %{value: 1}, measurement: "m", timestamp: 0}]
+
+      iex> Redis2influx.Harvester.check([%{measurement: "m", cmd: [], redis: {:a, :b}}], %{a: %{b: []}}, 0)
+      [%{tags: %{redis_group: :a, redis: :b}, fields: %{value: 1}, measurement: "m", timestamp: 0}]
+
+      iex> Redis2influx.Harvester.check([%{measurement: "m", cmd: [], redis: :a}], %{a: %{b: [], c: []}}, 0)
+      [
+        %{fields: %{value: 1}, measurement: "m", tags: %{redis: :b, redis_group: :a}, timestamp: 0},
+        %{fields: %{value: 1}, measurement: "m", tags: %{redis: :c, redis_group: :a}, timestamp: 0}
+      ]
+  """
+  def check(
+    metrics \\ Application.get_env(:redis2influx, :metrics, []),
+    redises \\ Application.get_env(:redis2influx, :redises, %{}),
+    ms_timestamp \\ :os.system_time(:milli_seconds)
+  ) do
+
+    interval = Redis2influx.interval
+    nanosecond_timestamp = interval * div(ms_timestamp, interval*1000) * 1_000_000_000
+
+    metrics
     |> Enum.map(&Map.merge(@defaults, &1))
     |> Enum.flat_map(&flatten/1)
     |> Enum.flat_map(&resolve_redises(&1, redises))
-    |> Enum.map(&substitute/1)
+    |> Enum.map(&substitute(&1, ms_timestamp))
     |> Enum.map(&measure/1)
     |> Enum.filter(fn(m) -> Map.has_key?(m, :result) end)
     |> Enum.map(&build_influx_data/1)
     |> Enum.map(&Map.put(&1, :timestamp, nanosecond_timestamp))
-
-    Logger.debug("writing points #{inspect points}")
-
-    %{points: points}
-    |> Redis2influx.Influx.write
   end
 
   @doc """
@@ -103,12 +116,12 @@ defmodule Redis2influx.Harvester do
     [metric]
   end
 
-  def substitute(%{cmd: cmd} = metric) do
+  def substitute(%{cmd: cmd} = metric, ms_timestamp) do
     newcmd = cmd |> Enum.map(fn
       :now -> 
-        :os.system_time(:seconds)
+        div(ms_timestamp, 1000)
       :now_ms -> 
-        :erlang.system_time(:milli_seconds)
+        ms_timestamp
       smth ->
         smth
     end)
@@ -116,7 +129,7 @@ defmodule Redis2influx.Harvester do
   end
 
   def measure(%{cmd: cmd} = metric) do
-    case Eredis.q(metric.redis_args, cmd) do
+    case @redis_client.q(metric.redis_args, cmd) do
       {:error, reason} ->
         Logger.info("error #{inspect reason} while send #{inspect cmd} to #{inspect metric.redis_args}")
         metric
@@ -129,15 +142,15 @@ defmodule Redis2influx.Harvester do
   ## Examples
 
       iex> Redis2influx.Harvester.build_influx_data(%{measurement: :name, redis_args: :r1, cmd: :c1, tags: [], result: "123"})
-      %{fields: %{value: 123}, measurement: :name, tags: []}
+      %{fields: %{value: 123}, measurement: :name, tags: %{}}
       iex> Redis2influx.Harvester.build_influx_data(%{measurement: :name, redis_args: :r1, cmd: :c1, tags: [a: :b], result: "123"})
-      %{fields: %{value: 123}, measurement: :name, tags: [a: :b]}
+      %{fields: %{value: 123}, measurement: :name, tags: %{a: :b}}
 
       iex> Redis2influx.Harvester.build_influx_data(%{measurement: :name, redis_args: :r1, section: :c1, tags: [], result: "a:123"})
-      %{fields: %{"a" => 123.0}, measurement: :name, tags: []}
+      %{fields: %{"a" => 123.0}, measurement: :name, tags: %{}}
 
       iex> Redis2influx.Harvester.build_influx_data(%{measurement: :name, redis_args: :r1, section: :c1, tags: [], result: "#CPU\\r\\nb:smth\\r\\na:123"})
-      %{fields: %{"a" => 123.0}, measurement: :name, tags: []}
+      %{fields: %{"a" => 123.0}, measurement: :name, tags: %{}}
 
   """
   def build_influx_data(metric) do
@@ -150,7 +163,7 @@ defmodule Redis2influx.Harvester do
         %{
           measurement: metric.measurement,
           fields:      %{value_name => int_value},
-          tags:        metric.tags
+          tags:        :maps.from_list(metric.tags)
         }
       splitted ->
         parsed = for [name, value] <- splitted do
@@ -163,7 +176,7 @@ defmodule Redis2influx.Harvester do
         %{
           measurement: metric.measurement,
           fields:      :maps.from_list(metrics),
-          tags:        metric.tags
+          tags:        :maps.from_list(metric.tags)
         }
     end
   end

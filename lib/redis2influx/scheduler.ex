@@ -1,6 +1,8 @@
 defmodule Redis2influx.Scheduler do
   use GenServer
 
+  require Logger
+
   def start_link() do
     GenServer.start_link(__MODULE__, [], [])
   end
@@ -11,7 +13,12 @@ defmodule Redis2influx.Scheduler do
   end
 
   def handle_info(:work, state) do
-    Redis2influx.Harvester.check
+    points = Redis2influx.Harvester.check
+    Logger.debug("writing points #{inspect points}")
+
+    %{points: points}
+    |> Redis2influx.Influx.write
+    
     schedule_work(Redis2influx.interval)
     {:noreply, state}
   end
