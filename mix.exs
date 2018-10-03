@@ -8,7 +8,7 @@ defmodule Redis2influx.MixProject do
       app: :redis2influx,
       version: "0.1.0",
       elixir: "~> 1.7",
-      elixirc_paths: elixirc_paths(Mix.env),
+      elixirc_paths: elixirc_paths(Mix.env()),
       start_permanent: Mix.env() == :prod,
       deps: deps(),
       package: package(),
@@ -16,7 +16,7 @@ defmodule Redis2influx.MixProject do
     ]
   end
 
-  defp elixirc_paths(:test), do: ["lib","test/support"]
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
   defp elixirc_paths(_), do: ["lib"]
 
   # Run "mix help compile.app" to learn about applications.
@@ -30,8 +30,8 @@ defmodule Redis2influx.MixProject do
   defp deps do
     [
       {:breaky, github: "mmzeeman/breaky"},
-      {:instream, "~> 0.15" },
-      {:eredis, "~> 1.0.8" },
+      {:instream, "~> 0.15"},
+      {:eredis, "~> 1.0.8"},
       {:excoveralls, "~> 0.5", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:earmark, "~> 1.1", only: :dev},
@@ -42,20 +42,20 @@ defmodule Redis2influx.MixProject do
   end
 
   defp docs do
- [
+    [
       extras: ["CHANGELOG.md", "README.md"],
       main: "readme",
       source_ref: "master",
       source_url: @url_github
-]
+    ]
   end
 
-defp package do
+  defp package do
     %{
       files: [".formatter.exs", "CHANGELOG.md", "mix.exs", "README.md", "lib"],
       licenses: ["Apache 2.0"],
       links: %{"GitHub" => @url_github},
       maintainers: ["Denis Kirichenko"]
     }
-end
+  end
 end

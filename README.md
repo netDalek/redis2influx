@@ -24,7 +24,15 @@ config :redis2influx, Redis2influx.Influx,
   port:      8089
 ```
 Read `Instream.Connection` documentation for details.
-### Configure redis connections
+### Configure time interval in seconds  
+
+```
+config :redis2influx, :interval, 1
+```
+
+### Redis section
+Redises config consists of a map with eredis connection attributes
+
 ```
 config :redis2influx, redises: %{
   redis0: ['127.0.0.1', 6379, 0],
@@ -35,12 +43,6 @@ config :redis2influx, redises: %{
     b: ['127.0.0.1', 6379, 4],
   }
 }
-```
-
-### Configure time interval in seconds  
-
-```
-config :redis2influx, :interval, 1
 ```
 
 ### Configure metrics that will be send to influxdb
@@ -74,13 +76,36 @@ config :redis2influx, :metrics, [
 * `cmd` - redis command that return some numeric value. See below
 * `tags` - additional influx tags
 
-## Redis syntax
+### Redis key value
 
-Redis can be an atom, list of atoms and tuples.
+Redis value in metrics section can be an atom, list of atoms and tuples.
 Each item represent one redis database or a group of redis databases from redis section.
-Each measurement has tag `redis`. There is also can be `redis_group` tag.
+The name of redis and redis group will be added to measurement tags.
 
-## Cmd syntax
+```
+%{
+  # ...
+  redis: :redis0
+  # ...
+},
+%{
+  # ...
+  redis: :redis_group
+  # ...
+},
+%{
+  # ...
+  redis: {:redis_group, :a}
+  # ...
+},
+%{
+  # ...
+  redis: [:redis0, :redis1, :redis_group]
+  # ...
+},
+```
+
+## Cmd key value
 
 Cmd can be a list with one redis command or a map with several redis commands
 ```
@@ -99,8 +124,8 @@ Cmd can be a list with one redis command or a map with several redis commands
 }
 ```
 
-When cmd is a list with one redis command, measurement value name will be `value`.
-When cmd is a map, map key become a measurement value name.
+When cmd is a list with one redis command, measurement field name will be `value`.
+When cmd is a map, map key become a measurement field name.
 
 Inside redis command can be used atoms `:now` and `:now_ms`
 that will be replaced with current timestamp in seconds and milliseconds accordingly
@@ -115,3 +140,27 @@ that will be replaced with current timestamp in seconds and milliseconds accordi
   # ...
 }
 ```
+
+Redis command result can be a text like this
+
+```
+# CPU
+used_cpu_sys:33.46
+used_cpu_user:16.57
+used_cpu_sys_children:0.00
+used_cpu_user_children:0.00
+```
+
+In this case every row become a separate field. Text before colon become a field name.
+
+```
+%{
+  # ...
+  cmd: ["INFO", "cpu"],
+  # ...
+}
+```
+
+## More examples
+
+See `Redis2influx.Harvester`

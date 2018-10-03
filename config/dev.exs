@@ -1,14 +1,14 @@
 use Mix.Config
 
-config :redis2influx, redises: %{
-  redis0: ['127.0.0.1', 6379, 0],
-  redis1: ['127.0.0.1', 6379, 1],
-
-  redis_group: %{
-    a: ['127.0.0.1', 6379, 3],
-    b: ['127.0.0.1', 6379, 4],
+config :redis2influx,
+  redises: %{
+    redis0: ['127.0.0.1', 6379, 0],
+    redis1: ['127.0.0.1', 6379, 1],
+    redis_group: %{
+      a: ['127.0.0.1', 6379, 3],
+      b: ['127.0.0.1', 6379, 4]
+    }
   }
-}
 
 config :redis2influx, :metrics, [
   %{
@@ -26,17 +26,15 @@ config :redis2influx, :metrics, [
       l3: ["INFO", "memory"],
       l4: ["INFO", "cpu"],
       l5: ["ZCOUNT", "sorted_set", 0, :now],
-      l6: ["ZCOUNT", "sorted_set", 0, :now_ms],
+      l6: ["ZCOUNT", "sorted_set", 0, :now_ms]
     },
     tags: [type: :sample]
   }
 ]
 
 config :logger,
-    backends: [:console]
+  backends: [:console]
 
-config :logger, :file,
-    path: "log/dev.log"
+config :logger, :file, path: "log/dev.log"
 
-config :logger, :console,
-    format: "\n$date $time [$level] $levelpad$metadata $message"
+config :logger, :console, format: "\n$date $time [$level] $levelpad$metadata $message"
