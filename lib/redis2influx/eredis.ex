@@ -3,8 +3,6 @@ defmodule Redis2influx.Eredis do
   require Logger
   use GenServer
 
-  @reconnect_interval 1000
-
   def start_link(args) do
     name = redis_name(args)
     GenServer.start_link(__MODULE__, args, name: name)
@@ -33,7 +31,8 @@ defmodule Redis2influx.Eredis do
   @impl true
   def init(args) do
     :erlang.send_after(0, self(), :connect)
-    {:ok, %{args: args, redis: nil}}
+    reconnect_intervals = Redis2influx.redis_reconnect_intervals()
+    {:ok, %{args: args, redis: nil, rest_intervals: reconnect_intervals}}
   end
 
   @impl true
@@ -53,10 +52,19 @@ defmodule Redis2influx.Eredis do
         {:noreply, %{state | redis: conn}}
 
       error ->
+        {interval, rest} = get_interval(state.rest_intervals)
         Logger.error("redis #{inspect(state.args)} error #{inspect(error)}")
-        :erlang.send_after(@reconnect_interval, self(), :connect)
-        {:noreply, state}
+        :erlang.send_after(interval, self(), :connect)
+        {:noreply, %{state | rest_intervals: rest}}
     end
+  end
+
+  defp get_interval([interval]) do
+    {interval, [interval]}
+  end
+
+  defp get_interval([interval | intervals]) do
+    {interval, intervals}
   end
 
   defp redis_name(args) do
