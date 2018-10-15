@@ -29,9 +29,8 @@ defmodule Redis2influx.MixProject do
 
   defp deps do
     [
-      {:breaky, github: "mmzeeman/breaky"},
       {:instream, "~> 0.15"},
-      {:eredis, "~> 1.0.8"},
+      {:eredis_sync, "~> 0.1.2"},
       {:excoveralls, "~> 0.5", only: :test},
       {:dialyxir, "~> 0.5", only: [:dev], runtime: false},
       {:earmark, "~> 1.1", only: :dev},
