@@ -1,5 +1,10 @@
 use Mix.Config
 
+config :redis2influx, Redis2influx.Influx,
+  host: "localhost",
+  port_udp: 8089,
+  writer: Instream.Writer.UDP
+
 config :redis2influx,
   redises: %{
     redis0: ['127.0.0.1', 6379, 0],

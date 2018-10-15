@@ -16,8 +16,8 @@ defmodule Redis2influx.Scheduler do
     points = Redis2influx.Harvester.check()
     Logger.debug("writing points #{inspect(points)}")
 
-    %{points: points}
-    |> Redis2influx.Influx.write()
+    :ok = %{points: points}
+          |> Redis2influx.Influx.write()
 
     schedule_work(Redis2influx.interval())
     {:noreply, state}
