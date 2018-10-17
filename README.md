@@ -105,7 +105,7 @@ The name of redis and redis group will be added to measurement tags.
 },
 ```
 
-## Cmd key value
+### Cmd key value
 
 Cmd can be a list with one redis command or a map with several redis commands
 ```

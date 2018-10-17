@@ -1,4 +1,6 @@
 defmodule Redis2influx.Scheduler do
+  @moduledoc false
+
   use GenServer
 
   require Logger

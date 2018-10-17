@@ -1,4 +1,6 @@
 defmodule Redis2influx do
+  @moduledoc false
+
   def interval do
     Application.get_env(:redis2influx, :interval, 60)
   end

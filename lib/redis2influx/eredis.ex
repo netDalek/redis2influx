@@ -3,6 +3,8 @@ defmodule Redis2influx.Eredis do
   require Logger
   use GenServer
 
+  @moduledoc false
+
   def start_link(args) do
     name = redis_name(args)
     GenServer.start_link(__MODULE__, args, name: name)
