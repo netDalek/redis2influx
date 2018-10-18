@@ -1,4 +1,8 @@
 defmodule Redis2influx.Harvester do
+  @moduledoc """
+    Module for internal use
+  """
+
   require Logger
 
   defstruct field: :value,

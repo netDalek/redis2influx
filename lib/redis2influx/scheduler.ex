@@ -16,10 +16,11 @@ defmodule Redis2influx.Scheduler do
 
   def handle_info(:work, state) do
     points = Redis2influx.Harvester.check()
-    Logger.debug("writing points #{inspect(points)}")
+    Logger.debug(fn -> "writing points #{inspect(points)}" end)
 
-    :ok = %{points: points}
-          |> Redis2influx.Influx.write()
+    :ok =
+      %{points: points}
+      |> Redis2influx.Influx.write()
 
     schedule_work(Redis2influx.interval())
     {:noreply, state}

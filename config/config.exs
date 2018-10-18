@@ -13,6 +13,6 @@ config :redis2influx, :interval, 1
 
 config :redis2influx, :redises, %{}
 
-config :redis2influx, :reconnect_intervals, [1000, 5000, 60000, 300000]
+config :redis2influx, :reconnect_intervals, [1000, 5000, 60000, 300_000]
 
 import_config "#{Mix.env()}.exs"

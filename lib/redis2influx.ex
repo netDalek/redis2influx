@@ -6,6 +6,6 @@ defmodule Redis2influx do
   end
 
   def redis_reconnect_intervals do
-    Application.get_env(:redis2influx, :redis_reconnect_intervals, [1000, 5000, 60000, 300000])
+    Application.get_env(:redis2influx, :redis_reconnect_intervals, [1000, 5000, 60_000, 300_000])
   end
 end
